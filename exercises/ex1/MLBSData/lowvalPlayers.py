@@ -1,8 +1,22 @@
+#!/usr/bin/env python3
+
 import csv
 import heapq
-import time
+import argparse
 
-start=time.time()
+
+def parse_args():
+    """
+    creating a Command Line Interface to parse arguments.
+    """
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("minOnBase", type=int)
+    parser.add_argument("outcome", type=str)
+
+
+    return parser.parse_args()
+
 def findLowValPlayer(minOnBase: int, outcome: str):
     with open('MLB Showdown Raw Data Position Players.csv', 'r') as f:
         reader = csv.reader(f)
@@ -26,9 +40,12 @@ def findLowValPlayer(minOnBase: int, outcome: str):
             if lowVal == '':
                 continue
         #use a heap to keep the lowest 3 values
-            heapq.heappush(hitList,(-int(lowVal),i+1))
-            if len(hitList)>3:
-                heapq.heappop(hitList)
+            if len(hitList)<3:
+                heapq.heappush(hitList,(-int(lowVal),i+1))
+            else:
+                heapq.heappushpop(hitList,(-int(lowVal),i+1))
+            #if len(hitList)>3:
+            #    heapq.heappop(hitList)
 
         #this seems clunky but to resort these guys ascending i make a list and loop it backwards
         for i in range(len(hitList)):
@@ -36,5 +53,10 @@ def findLowValPlayer(minOnBase: int, outcome: str):
         for i in range(len(threeLow)):
             print(playerStats[threeLow[-i-1][1]])
 
+def main():
+    args=parse_args()
 
-print(time.time()-start)
+    findLowValPlayer(args.minOnBase, args.outcome)
+
+if __name__ == '__main__':
+    main()
