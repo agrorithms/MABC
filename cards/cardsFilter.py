@@ -26,25 +26,27 @@ def fieldingFilter(player: dict, desiredPos:str, minFieldStat:int):
     by qualifying for a position and having at least a minimum fielding stat at that position"""
 
     positionIdx=player['Position'].find(desiredPos)
-    #print(positionIdx,desiredPos, player['Position'])
+
+    #first look for "general" positions like OF/ IF which qualify for any infield / outfield position
     if positionIdx==-1:
         if desiredPos in ('1B','2B','3B','SS'):
-            #print('checking IF')
+
             positionIdx=player['Position'].find('IF')
 
         elif desiredPos in ('LF','CF','RF'):
             positionIdx=player['Position'].find('OF')
 
+    #if desired position or general quaifying position is present, look for the the fielding value by ffinding the next '+' after given position
     if positionIdx!=-1:
         commaIdx=player['Position'].find(',',positionIdx)
         if commaIdx==-1:
-            #print('no comma')
+
             fielding = int(player['Position'][player['Position'].find('+',positionIdx)+1:])
         else:
-            #print('comma')
+
             fielding = int(player['Position'][player['Position'].find('+',positionIdx)+1:commaIdx])
         return fielding >=minFieldStat
-
+    # qualify any position for 1B and set filelding to -1 or -2 based on position
     elif desiredPos=='1B':
         if player['Position']=='---' or player['Position']=='--':
             return -2>=minFieldStat
@@ -52,9 +54,6 @@ def fieldingFilter(player: dict, desiredPos:str, minFieldStat:int):
             return -1>=minFieldStat
     return False
 
-
-
-    #need to continue by looking for fielding stat after desired position ( first + after position?)
 
 
 
