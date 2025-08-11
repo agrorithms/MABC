@@ -1,0 +1,5 @@
+__pycache__/
+reading_notes/
+node_modules/
+package.json
+package-lock.json
