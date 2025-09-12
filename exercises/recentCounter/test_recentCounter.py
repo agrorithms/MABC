@@ -11,3 +11,30 @@ def test_two_users():
      
     assert counter.get_all('alice') == [1,200,3000,3200]    # get all user1
     assert counter.get_all('bob') == [250,4000]             # get all user2
+
+def test_number2():
+    counter=RecentCounter(.020)
+    assert counter.ping('alice',0)==1
+    assert counter.ping('alice',3)==2
+    assert counter.ping('alice',6)==3
+    assert counter.ping('alice',9)==4
+    assert counter.ping('alice',12)==5
+    assert counter.ping('alice',15)==6
+    assert counter.ping('alice',18)==7
+    assert counter.ping('alice',21)==7
+    assert counter.ping('alice',24)==7
+    assert counter.ping('alice',27)==7
+    assert counter.ping('alice',30)==7
+
+def test_number3():
+    counter=RecentCounter(.020)
+    assert counter.ping('alice',0)==1
+    assert counter.ping('alice',3)==2
+    assert counter.ping('alice',6)==3
+    assert counter.ping('alice',9)==4
+    assert counter.ping('alice',12)==5
+    assert counter.ping('alice',15)==6
+    assert counter.ping('alice',18)==7
+    assert counter.ping('alice',21)==7
+    assert counter.ping('alice',2000)==1
+    assert counter.ping('alice',2001)==2
