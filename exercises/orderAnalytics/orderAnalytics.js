@@ -20,6 +20,9 @@ function orderAnalysis(orderInput) {
                         //console.log('coupon found')
                         if (item['coupon']['type']=='flat') {
                             itemPrice -= item['coupon']['value']
+                            if (itemPrice<0){
+                                itemPrice=0
+                            }
                             //console.log('flat',itemPrice)
                         } else if (item['coupon']['type']=='percent'){
                             itemPrice*=(1-item['coupon']['value']/100)

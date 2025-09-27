@@ -10,6 +10,14 @@ class TimeRange:
         if not isinstance(other,TimeRange):
             return False
         return self.close==other.close and self.open==other.open
+    def __len__(self):
+        if self.close>=self.open:
+            return self.close - self.open
+        else:
+            return 24-self.open + self.close
+    def __repr__(self):
+        return f'TimeRange(open = {self.open}, close = {self.close})'
+    
     
 
 def isInRange(openHours:TimeRange,targetHours:TimeRange):
@@ -46,12 +54,24 @@ class BankHours:
         if tradeHours.close<tradeHours.open:
             tradeHoursWrap=TimeRange(0,tradeHours.close)
             tradeHours=TimeRange(tradeHours.open,24)
+            
             wrapHoursPass=False
-            #print(tradeHours,tradeHoursWrap)
+            
         for openHours in self.hours:
+            
+            if tradeHoursWrap!=None and isInRange(openHours,tradeHoursWrap):
+                
+                wrapHoursPass=True
             if isInRange(openHours,tradeHours):
+                
                 if tradeHoursWrap==None or wrapHoursPass:
                     return True
-            elif tradeHoursWrap and isInRange(openHours,tradeHoursWrap):
-                wrapHoursPass = True
+            
         return False        
+    
+    def __repr__(self):
+        out='BankHours('
+        for hours in self.hours:
+            out+= f'({hours.open},{hours.close})'
+        return out+')'
+    
