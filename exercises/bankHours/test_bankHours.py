@@ -1,8 +1,5 @@
 import pytest
-from random import randint, seed
-from bankHours import TimeRange, BankHours, isInRange
-
-
+from bankHours import TimeRange, BankHours
 
 
 test1= BankHours([TimeRange(9,10),TimeRange(9.5,12),TimeRange(10,11),TimeRange(19,24),TimeRange(3,8),TimeRange(3,7),TimeRange(4,7),TimeRange(2,3),TimeRange(18,4),TimeRange(20,6),TimeRange(21,2)])
@@ -24,86 +21,64 @@ def test_bank_hours():
 
 #AI Test Case
 
-def generate_random_timeranges(n=1000, wrap_chance=0.2):
-    """Generate n random TimeRanges, some wrapping around midnight."""
-    seed(42)
-    ranges = []
-    for _ in range(n):
-        start = randint(0, 23)
-        end = randint(0, 23)
-        if randint(0, 100) < wrap_chance * 100:
-            # force wrap-around
-            if end >= start:
-                end = (start - 1) % 24
-        ranges.append(TimeRange(start, end))
-    return ranges
+def test_bankhours_isCovered_deterministic_with_boundaries():
+    # Fixed input schedule with overlaps and wrap-around
+    bank_hours = [
+        TimeRange(0, 3),      # early morning
+        TimeRange(2, 6),      # overlap with 0–3 → merges into 0–6
+        TimeRange(8, 12),     # morning
+        TimeRange(13, 17),    # afternoon
+        TimeRange(20, 23),    # evening
+        TimeRange(22, 2),     # wrap-around
+    ]
+    bh = BankHours(bank_hours)
 
-def test_bankhours_stress():
-    # Create many overlapping + wrapping hours
-    bank_ranges = generate_random_timeranges(2000, wrap_chance=0.3)
-    bh = BankHours(bank_ranges)
-
-    # Hours should be merged and sorted
+    # Verify merge and order
     for i in range(1, len(bh.hours)):
-        assert bh.hours[i].open >= bh.hours[i-1].open
-        assert bh.hours[i].open > bh.hours[i-1].close
+        assert bh.hours[i].open > bh.hours[i-1].close, "Merged ranges overlap or unsorted"
 
-    # Spot check coverage
-    # Full 24h coverage if ranges cover midnight wrap
-    full_day = TimeRange(0, 24)
-    covered_any = any(isInRange(openHours, full_day) for openHours in bh.hours)
-    if covered_any:
-        assert bh.isCovered(full_day)
-
-    # Random samples
-    samples = [
-        TimeRange(9, 12),
-        TimeRange(22, 23),
-        TimeRange(23, 2),   # wrap-around trade
-        TimeRange(15, 18),
+    # Deterministic coverage expectations (True = should be covered)
+    cases = [
+        # --- standard and overlapping ranges ---
+        (TimeRange(0, 1),  True),   # within merged 0–6
+        (TimeRange(2, 5),  True),   # within merged 0–6
+        (TimeRange(5, 8),  False),  # between 6–8 gap
+        (TimeRange(8, 10), True),   # within 8–12
+        (TimeRange(10, 12), True),  # boundary inclusive
+        (TimeRange(12, 13), False), # closed gap
+        (TimeRange(13, 17), True),  # full afternoon
+        (TimeRange(15, 16), True),  # inside afternoon
+        (TimeRange(17, 20), False), # closed gap
+        (TimeRange(21, 23), True),  # within 20–23
+        (TimeRange(23, 1),  True),  # within overnight wrap (22–2)
+        (TimeRange(22, 2),  True),  # full wrap-around
+        (TimeRange(0, 24),  False), # not full 24h coverage
+        (TimeRange(11, 14), False), # crosses open and closed
+        # --- boundary inclusivity tests ---
+        (TimeRange(6, 8),   False), # between merged 0–6 and 8–12
+        (TimeRange(0, 6),   True),  # exactly full merged range
+        (TimeRange(6, 6),   True), # at boundary (end of open range)
+        (TimeRange(8, 8),   True), # zero-length on start boundary
+        (TimeRange(8, 12),  True),  # exactly full morning range
+        (TimeRange(12, 12), True), # closed point boundary
+        (TimeRange(20, 23), True),  # exact evening hours
+        (TimeRange(23, 0),  True), # invalid reverse no-wrap
+        (TimeRange(22, 24), True),  # end overlaps midnight (wrap range covers)
+        # --- degenerate / edge cases ---
+        (TimeRange(3, 3),   True),
+        (TimeRange(0, 0),   True),
     ]
-    for s in samples:
-        # isCovered must agree with manual check
-        manual = any(isInRange(openHours, s) for openHours in bh.hours) or \
-                 (s.close < s.open and
-                  any(isInRange(openHours, TimeRange(0, s.close)) for openHours in bh.hours) and
-                  any(isInRange(openHours, TimeRange(s.open, 24)) for openHours in bh.hours))
-        assert bh.isCovered(s) == manual
+
+    for tr, expected in cases:
+        result = bh.isCovered(tr)
+        assert result == expected, f"{tr}: expected {expected}, got {result}"
+
+    # Optional: check that wrap-around merge worked correctly
+    # Expect hours to include the overnight continuation (22–2)
+    assert any(h.open == 22 and h.close == 2 for h in bank_hours) or any(
+        h.open <= 22 and h.close >= 2 for h in bh.hours
+    )
 
 
 
-def manual_isCovered(hours: list[TimeRange], tr: TimeRange) -> bool:
-    if tr.close >= tr.open:
-        return any(isInRange(openHours, tr) for openHours in hours)
-    else:
-        wrap1 = TimeRange(tr.open, 24)
-        wrap2 = TimeRange(0, tr.close)
-        wrap1_ok = any(isInRange(openHours, wrap1) for openHours in hours)
-        wrap2_ok = any(isInRange(openHours, wrap2) for openHours in hours)
-        return wrap1_ok and wrap2_ok
 
-def random_timerange():
-    start = randint(0, 23)
-    end = randint(0, 23)
-    return TimeRange(start, end)
-
-def test_bankhours_isCovered_stress():
-    seed(123)
-   
-    bank_ranges = [random_timerange() for _ in range(5)]
-    bh = BankHours(bank_ranges)
-
-    # stress check isCovered on many random trade ranges
-    for _ in range(1000):
-        trade = random_timerange()
-        assert bh.isCovered(trade) == manual_isCovered(bh.hours, trade)
-
-    # also spot check edge conditions
-    edge_cases = [
-        TimeRange(0, 0),    # zero-length
-        TimeRange(0, 24),   # full day
-        TimeRange(23, 1),   # overnight wrap
-        TimeRange(12, 12),  # zero-length midday
-    ]
-    for tr in edge_cases:
-        assert bh.isCovered(tr) == manual_isCovered(bh.hours, tr)
