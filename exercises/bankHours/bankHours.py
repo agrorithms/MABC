@@ -1,4 +1,3 @@
-from collections import namedtuple
 
 class TimeRange:
     def __init__(self,val1:float,val2:float):
@@ -17,12 +16,14 @@ class TimeRange:
             return 24-self.open + self.close
     def __repr__(self):
         return f'TimeRange(open = {self.open}, close = {self.close})'
+    def isWrapped(self):
+        return self.close<self.open
     
     
 
 def isInRange(openHours:TimeRange,targetHours:TimeRange):
         '''
-        assume open is always less than close based on tradeHoursWrap handling in the isCovered method, 
+        assume open is always less than close based on isWrapped handling in the isCovered method, 
         which is the only place this function is called
         '''
         return targetHours.open>=openHours.open and targetHours.close<=openHours.close
@@ -33,7 +34,7 @@ class BankHours:
     
     def updateBankHours(self,newBankHours:list[TimeRange]):
         for i,bank in enumerate(newBankHours):
-            if bank.close<bank.open:
+            if bank.isWrapped():
                 newBankHours.append(TimeRange(0,bank.close))
                 newBankHours[i].close=24
         newBankHours.sort()
@@ -50,22 +51,14 @@ class BankHours:
     
 
     def isCovered(self,tradeHours:TimeRange):
-        tradeHoursWrap=None
-        if tradeHours.close<tradeHours.open:
-            tradeHoursWrap=TimeRange(0,tradeHours.close)
-            tradeHours=TimeRange(tradeHours.open,24)
-            
-            wrapHoursPass=False
+        if tradeHours.isWrapped():
+            return self.isCovered(TimeRange(0,tradeHours.close)) and self.isCovered(TimeRange(tradeHours.open,24))
             
         for openHours in self.hours:
             
-            if tradeHoursWrap!=None and isInRange(openHours,tradeHoursWrap):
-                
-                wrapHoursPass=True
             if isInRange(openHours,tradeHours):
-                
-                if tradeHoursWrap==None or wrapHoursPass:
-                    return True
+                return True  
+              
             
         return False        
     
