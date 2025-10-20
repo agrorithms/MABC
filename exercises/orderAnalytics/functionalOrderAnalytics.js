@@ -2,10 +2,22 @@ function orderAnalysis(orderInput) {
 	let ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
     return Object.values(Object.values(orderInput.filter((order) => !order.returned && new Date(order.createdAt)>=ninetyDaysAgo)
-    									 .reduce((acc, order) => {
-                            let filtereditems = order.items.filter((item) => item.category == 'Books' || item.category == 'Electronics')
+    									.reduce((acc, order) => {
+                            let filtereditems = order.items.filter((item) => item.category == 'Books' || item.category == 'Electronics');
                             let itemSummary = filtereditems.reduce((innerAcc, item) => {
-                                innerAcc.netSpend += item.price*item.qty //coupon calcualtion to be added
+                                lineItemPrice=item.price*item.qty
+                                
+                                if (item['coupon']){
+                                    if (item['coupon']['type']=='flat') {
+                                        lineItemPrice -= item['coupon']['value']
+                                        if (lineItemPrice<0){
+                                            lineItemPrice=0
+                                        }
+                                    } else if (item['coupon']['type']=='percent'){
+                                        lineItemPrice*=(1-item['coupon']['value']/100)
+                                    } 
+                                }
+                                innerAcc.netSpend += lineItemPrice
                                 innerAcc.totalQty += item.qty
                                 innerAcc.distinctSkus.add(item.sku)
                                 return innerAcc
