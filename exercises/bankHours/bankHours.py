@@ -52,15 +52,10 @@ class BankHours:
 
     def isCovered(self,tradeHours:TimeRange):
         if tradeHours.isWrapped():
-            return self.isCovered(TimeRange(0,tradeHours.close)) and self.isCovered(TimeRange(tradeHours.open,24))
-            
-        for openHours in self.hours:
-            
-            if isInRange(openHours,tradeHours):
-                return True  
-              
-            
-        return False        
+            return self.isCovered(TimeRange(0,tradeHours.close)) and self.isCovered(TimeRange(tradeHours.open,24))            
+             
+        return any(isInRange(openHours,tradeHours) for openHours in self.hours)
+                   
     
     def __repr__(self):
         out='BankHours('
