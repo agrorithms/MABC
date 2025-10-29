@@ -3,6 +3,7 @@ from printSpool import PrintSpoolerList,PrintSpoolerQueue
 from printSpool import simulate
 
 
+newSpool=PrintSpoolerList()
 
 @pytest.mark.parametrize ('cmds,expected', [
     (['SEND test', 'NEXT', 'PRINT'], ['Next is test','Printing test']),
@@ -14,8 +15,9 @@ from printSpool import simulate
 
 ])
 def test_simple(cmds, expected):
-    assert simulate(cmds,False) == expected
+    assert simulate(cmds,newSpool) == expected
 
+newSpool=PrintSpoolerList()
 @pytest.mark.parametrize ('cmds,expected', [
     (['SEND test1', 'NEXT', 'PRINT','NEXT','PRINT'], ['Next is test1','Printing test1','Queue empty','No documents waiting']),
     (['NEXT', 'NEXT','PRINT', 'SEND test1'], ['Queue empty','Queue empty','No documents waiting']),
@@ -24,7 +26,8 @@ def test_simple(cmds, expected):
 
 ])
 def test_longer(cmds, expected):
-    assert simulate(cmds,False) == expected
+    newSpool=PrintSpoolerList()
+    assert simulate(cmds,newSpool) == expected
 
 
 
@@ -72,7 +75,8 @@ class TestSimulate:
             "PRINT",
             "PRINT",
         ]
-        output = simulate(commands,False)
+        newSpool=PrintSpoolerList()
+        output = simulate(commands,newSpool)
         assert output == [
             "Next is a",
             "Printing a",
@@ -83,12 +87,14 @@ class TestSimulate:
 
     def test_empty_queue_behavior(self):
         commands = ["NEXT", "PRINT"]
-        output = simulate(commands,False)
+        newSpool=PrintSpoolerList()
+        output = simulate(commands,newSpool)
         assert output == ["Queue empty", "No documents waiting"]
 
     def test_invalid_command(self):
         commands = ["SEND good", "BOGUS", "SEND fine"]
-        output = simulate(commands,False)
+        newSpool=PrintSpoolerList()
+        output = simulate(commands,newSpool)
         # Should reject invalid and keep processing
         assert output == [
             "Invalid command: BOGUS",
@@ -106,7 +112,8 @@ class TestSimulate:
             "PRINT",
             "PRINT",  # extra to test empty
         ]
-        output = simulate(commands,False)
+        newSpool=PrintSpoolerList()
+        output = simulate(commands,newSpool)
         assert output == [
             "Next is alpha",
             "Printing alpha",
@@ -119,7 +126,8 @@ class TestSimulate:
     def test_case_sensitivity(self):
         # Optional: depending on how strict you want
         commands = ["send test"]
-        output = simulate(commands,False)
+        newSpool=PrintSpoolerList()
+        output = simulate(commands,newSpool)
         assert output == ["Invalid command: send test"]
     
     def test_long_sequence(self):
@@ -135,8 +143,8 @@ class TestSimulate:
         # Peek at the next item, then drain them all
         commands.append("NEXT")
         commands.extend(["PRINT"] * 60)  # 50 left + 10 extra empties
-
-        output = simulate(commands,False)
+        newSpool=PrintSpoolerList()
+        output = simulate(commands,newSpool)
 
         # First 50 should print immediately
         expected_first_50 = [f"Printing doc{i}" for i in range(50)]
@@ -164,8 +172,8 @@ class TestSimulate:
         # Peek at the next item, then drain them all
         commands.append("NEXT")
         commands.extend(["PRINT"] * 5010)  # 50 left + 10 extra empties
-
-        output = simulate(commands,False)
+        newSpool=PrintSpoolerList()
+        output = simulate(commands,newSpool)
 
         # First 50 should print immediately
         expected_first_50 = [f"Printing doc{i}" for i in range(5000)]

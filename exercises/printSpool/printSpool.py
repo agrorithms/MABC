@@ -4,16 +4,9 @@ import argparse
 import time
 from collections import deque
 from functools import wraps
+from abc import ABC, abstractmethod
+from typing import Union, Callable
 
-def timing(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start = time.perf_counter()
-        result = func(*args, **kwargs)
-        end = time.perf_counter()
-        print(f"{func.__name__} took {end - start:.6f} seconds")
-        return result
-    return wrapper
 
 def parse_args():
     """
@@ -26,58 +19,79 @@ def parse_args():
     parser.add_argument('-l','--list',action='store_true',help='use list instead of queue')
     return parser.parse_args()
 
+class PrintSpooler(ABC):
+    @abstractmethod
+    def add_document(self,name:str) -> None:
+        pass
 
-class PrintSpoolerList:
-    def __init__(self):
-        self.queue=[]
+    def print_next(self) -> Union[str,None]:
+        pass
     
-    def add_document(self,name:str):
+    def peek(self) -> Union[str,None]:
+        pass
+
+    def __len__(self) -> int:
+        pass
+
+
+class PrintSpoolerList(PrintSpooler):
+    def __init__(self) -> None:
+        self.queue: list[str] = []
+    
+    def add_document(self,name:str) -> None:
         self.queue.append(name)
 
-    def print_next(self):
+    def print_next(self) -> Union[str,None]:
         if self.queue==[]:
             return None
         return self.queue.pop(0)
     
-    def peek(self):
+    def peek(self) -> Union[str,None]:
         if self.queue==[]:
             return None
         return self.queue[0]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.queue)
     
 
-class PrintSpoolerQueue:
-    def __init__(self):
-        self.queue=deque()
+class PrintSpoolerQueue(PrintSpooler):
+    def __init__(self) -> None:
+        self.queue: deque = deque()
     
-    def add_document(self,name:str):
+    def add_document(self,name:str) -> None:
         self.queue.append(name)
 
-    def print_next(self):
+    def print_next(self) -> Union[str,None]:
         if len(self)==0:
             return None
         return self.queue.popleft()
     
-    def peek(self):
+    def peek(self) -> Union[str,None]:
         if len(self)==0:
             return None
         return self.queue[0]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.queue)
 
+
+def timing(func: Callable[[list[str],PrintSpooler],list[str]]):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start: float = time.perf_counter()
+        result: list[str] = func(*args, **kwargs)
+        end: float = time.perf_counter()
+        print(f"{func.__name__} took {end - start:.6f} seconds")
+        return result
+    return wrapper
+
 @timing
-def simulate(commands: list[str],queue=True)-> list[str]:
-    if queue:
-        printspool=PrintSpoolerQueue()
-    else:
-        printspool = PrintSpoolerList()
-    output = []
+def simulate(commands: list[str],printspool: PrintSpooler)-> list[str]:
+    output: list = []
     for cmd in commands:
         if cmd == 'PRINT':
-            step=printspool.print_next()
+            step = printspool.print_next() 
             if step == None:
                 step = 'No documents waiting'
             else:
@@ -107,9 +121,10 @@ def main():
         commands = [cmd.strip() for cmd in commands]
 
     if args.list:
-        output=simulate(commands,False)
+        newSpool=PrintSpoolerList()
     else:
-        output = simulate(commands)
+        newSpool = PrintSpoolerQueue()
+    output = simulate(commands,newSpool)
 
     with open(args.outputFile, 'w') as f:
         f.writelines(item + '\n' for item in output)
