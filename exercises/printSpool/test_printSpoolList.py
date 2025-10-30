@@ -3,8 +3,6 @@ from printSpool import PrintSpoolerList,PrintSpoolerQueue
 from printSpool import simulate
 
 
-newSpool=PrintSpoolerList()
-
 @pytest.mark.parametrize ('cmds,expected', [
     (['SEND test', 'NEXT', 'PRINT'], ['Next is test','Printing test']),
     (['SEND test', 'NEXT', 'NEXT','PRINT'], ['Next is test','Next is test','Printing test']),
@@ -15,9 +13,9 @@ newSpool=PrintSpoolerList()
 
 ])
 def test_simple(cmds, expected):
+    newSpool=PrintSpoolerList()
     assert simulate(cmds,newSpool) == expected
 
-newSpool=PrintSpoolerList()
 @pytest.mark.parametrize ('cmds,expected', [
     (['SEND test1', 'NEXT', 'PRINT','NEXT','PRINT'], ['Next is test1','Printing test1','Queue empty','No documents waiting']),
     (['NEXT', 'NEXT','PRINT', 'SEND test1'], ['Queue empty','Queue empty','No documents waiting']),

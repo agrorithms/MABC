@@ -23,10 +23,10 @@ class PrintSpooler(ABC):
     @abstractmethod
     def add_document(self,name:str) -> None:
         pass
-
+    @abstractmethod
     def print_next(self) -> Union[str,None]:
         pass
-    
+    @abstractmethod
     def peek(self) -> Union[str,None]:
         pass
 
