@@ -74,26 +74,26 @@ function orderAnalysis(orderInput: Array<Order>) {
 
             if (itemSummary.totalQty !== 0) {
                 if (!(acc.customerSummary[order.customerId])) {
-                    //acc.customerSummary[order.customerId] = {}
-                    acc.customerSummary[order.customerId].customerId = order.customerId
-                    acc.customerSummary[order.customerId].netSpend = itemSummary.netSpend
-                    acc.customerSummary[order.customerId].avgUnitPrice = itemSummary.netSpend / itemSummary.totalQty
-                    acc.customerSkus[order.customerId] = itemSummary.distinctSkus
+                    acc.customerSkus[order.customerId] = itemSummary.distinctSkus;
+                    acc.customerSummary[order.customerId] = {
+                        'customerId': order.customerId,
+                        'netSpend': itemSummary.netSpend,
+                        'avgUnitPrice': itemSummary.netSpend / itemSummary.totalQty,
+                        'distinctSkus': itemSummary.distinctSkus.size
+                    };
 
                 } else {
-                    //console.log(itemSummary,acc.customerSummary[order.customerId])
-
-                    acc.customerSummary[order.customerId].avgUnitPrice = (acc.customerSummary[order.customerId].netSpend + itemSummary.netSpend) / ((acc.customerSummary[order.customerId].netSpend / acc.customerSummary[order.customerId].avgUnitPrice) + itemSummary.totalQty)
-                    acc.customerSummary[order.customerId].netSpend += itemSummary.netSpend
-                    acc.customerSkus[order.customerId] = new Set(...acc.customerSkus[order.customerId], ...(itemSummary.distinctSkus))
-
+                    let newNetSpend = acc.customerSummary[order.customerId].netSpend + itemSummary.netSpend;
+                    let newTotalQty = (acc.customerSummary[order.customerId].netSpend / acc.customerSummary[order.customerId].avgUnitPrice) + itemSummary.totalQty;
+                    acc.customerSummary[order.customerId].avgUnitPrice = newNetSpend / newTotalQty;
+                    acc.customerSummary[order.customerId].netSpend += itemSummary.netSpend;
+                    acc.customerSkus[order.customerId] = new Set(...acc.customerSkus[order.customerId], ...(itemSummary.distinctSkus));
+                    acc.customerSummary[order.customerId].distinctSkus = acc.customerSkus[order.customerId].size;
                 }
                 acc.customerSummary[order.customerId].distinctSkus = acc.customerSkus[order.customerId].size
             }
-            //console.log(acc.customerSummary[order.customerId])
             return acc;
         }, accInitial)
-    //['customerSummary','customerSkus']
     return Object.values(customersInfo.customerSummary).sort((a: CustomerInfo, b: CustomerInfo) => {
         if (a.netSpend > b.netSpend) {
             return -1;
