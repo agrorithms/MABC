@@ -1,61 +1,53 @@
-class LRUCacheDict:
-    def __init__(self,capacity):
-        self.cache={}
-        self.capacity=capacity
-        self.recency=[]
-        self.size=0
+from collections import OrderedDict
 
-    def __setitem__(self, key, value):
+_sentinel = object()
+class LRUCacheDict:
+    def __init__(self,capacity: int) -> None:
+        self.cache: OrderedDict = OrderedDict()
+        self.capacity: int = capacity
+
+    def __setitem__(self, key, value) -> None:
         
-        if key in self.recency:
-            self.recency.pop(self.recency.index(key))
-            self.size-=1
-        elif key not in self.cache and self.size>=self.capacity:
-            evict=self.recency.pop(0)
-            del self.cache[evict]
-            self.size-=1
-        
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        elif len(self.cache)>=self.capacity:
+            self.cache.popitem(last=False)
+           
         self.cache[key]=value
-        self.size+=1
-        self.recency.append(key)
+        
             
     def __getitem__(self,key):
         if key not in self.cache:
             raise KeyError(f"Key '{key}' not found in LRU Cache.")
         else:
-            self.recency.append(self.recency.pop(self.recency.index(key)))
+            self.cache.move_to_end(key)
             return self.cache[key]
 
-    def __contains__(self,key):
+    def __contains__(self,key) -> bool:
         return key in self.cache
     
-    def __len__(self):
-        return self.size
+    def __len__(self) -> int:
+        return len(self.cache)
 
     def __iter__(self):
-        return self.cache.keys()
+        return reversed(self.cache.keys())
     
     def get(self,key, default = None):
         if key not in self.cache:
             return default
         else:
-            self.recency.append(self.recency.pop(self.recency.index(key)))
+            self.cache.move_to_end(key)
             return self.cache[key]
     
-    def pop(self,key,default=None):
-        if key not in self.cache:
-            if default==None:
-                raise KeyError(f"Key '{key}' not found in LRU Cache.")
-            else:
-                return default
+    def pop(self,key,default=_sentinel):
+        if key not in self.cache and default==_sentinel:
+            raise KeyError(f"Key '{key}' not found in LRU Cache.")
         else:
-            self.recency.pop(self.recency.index(key))
-            evict=self.cache[key].pop()
-            self.size-=1
-            return evict
+            return self.cache.pop(key,default)
             
-    def __repr__(self):
+            
+    def __repr__(self) -> str:
         output = '{'
-        for key in self.cache.keys():
+        for key in self:
             output+=f'{key} : {self.cache[key]}, '
         return output[:-2] + '}'
