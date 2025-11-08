@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 class Node:
     def __init__(self, value: int) -> None:
@@ -23,26 +23,27 @@ class BinaryTree:
     def __init__(self) -> None:
         self.head: Optional[Node] = None
 
-    def add(self,value: int) -> None:
-        
+    def add(self,toAdd: Union[int,Node]) -> None:
+        if not isinstance(toAdd,Node):
+            toAdd = Node(toAdd)
         if not self.head:
-            self.head = Node(value)
+            self.head = toAdd
             return
 
         curr: Node = self.head
 
         while curr:
-            if value > curr.value:
+            if toAdd.value > curr.value:
                 if curr.right:
                     curr = curr.right
                 else:
-                    curr.right=Node(value)
+                    curr.right=toAdd
                     return
-            elif value < curr.value:
+            elif toAdd.value < curr.value:
                 if curr.left:
                     curr = curr.left
                 else:
-                    curr.left=Node(value)
+                    curr.left=toAdd
                     return
             else:
                 return
@@ -71,30 +72,121 @@ class BinaryTree:
             else:
                 return curr.value
 
-    """
-    def remove(self, value) -> None:
+    
+    def contains(self, value: int) -> None:
         if not self.head:
-            return
-
+            return False
+        
         curr: Node = self.head
-
         while curr:
             if value > curr.value:
-                if curr.right:
-                    curr = curr.right
-                else:
-                    curr.right=Node(value)
-                    return
+                curr = curr.right
             elif value < curr.value:
-                if curr.left:
-                    curr = curr.left
-                else:
-                    curr.left=Node(value)
+                curr = curr.left
+            else:
+                return True
+        return False
+    
+    def remove(self, value: int) -> None:
+        if not self.head:
+            return
+        
+        curr: Node = self.head
+        prev: Optional[Node] = None
+        while curr:
+            if value > curr.value:
+                prev = curr
+                curr = curr.right
+            elif value < curr.value:
+                prev = curr
+                curr = curr.left
+            else:
+                break
+        if not curr:
+            return
+        print(self, curr == self.head)
+        print(f'remove {value}', curr)
+        if curr == self.head:
+            if self.head.left:
+                toAdd=self.head.right
+                self.head = self.head.left
+                if toAdd:
+                    self.add(toAdd)
+                return
+            else:
+                self.head = self.head.right
+                return
+        
+        if prev.value<curr.value:
+            if curr.left:
+                toAdd=curr.right
+                prev.right = curr.left
+                if toAdd:
+                    self.add(toAdd)
                     return
             else:
+                prev.right = curr.right
                 return
-    """
-        
+        else:
+            print(f'prev: {prev}' )
+            if curr.right:
+                toAdd=curr.left
+                prev.left = curr.right
+                if toAdd:
+                    self.add(toAdd)
+                    return
+            else:
+                prev.left = curr.left
+                print(f'prev: {prev}')
+                return
+            
+
+        """
+        nodeStack: list[Node] = [curr]
+        if curr == self.head:
+            if curr.left and curr.right:
+                
+                while curr:
+                    if curr.left:
+                        curr=curr.left
+                        nodeStack.append(curr)
+                    else:
+                        break
+                while len(nodeStack)>1:
+                    nodeStack.pop().left = nodeStack[-1].left
+
+            elif curr.right:
+                self.head = curr.right
+            elif curr.left:
+                self.head = curr.left
+            else:
+                self.head = None
+            return    
+                
+
+        if curr.value<prev.value:
+            prev.left = curr.left
+            while curr:
+                if curr.left:
+                    curr=curr.left
+                    nodeStack.append(curr)
+                else:
+                    break
+            while len(nodeStack)>1:
+                nodeStack.pop().left = nodeStack[-1].left
+            return
+        elif curr.value>prev.value:
+            prev.value = curr.right
+            while curr:
+                if curr.right:
+                    curr=curr.right
+                    nodeStack.append(curr)
+                else:
+                    break
+            while len(nodeStack)>1:
+                nodeStack.pop().right = nodeStack[-1].right
+            return
+        """
 
     def __repr__(self):
         return dict(head=self.head).__repr__()
