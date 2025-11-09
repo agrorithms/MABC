@@ -195,10 +195,14 @@ def test_remove():
     assert tree.head.value == 6
     assert tree.head.left == None
     assert tree.head.right == testCompare
+    assert tree.head.right.right.value==9
+    assert tree.head.right.right.right.value==10
+    assert tree.head.right.right.right.right.value==(11)
 
     tree.add(3)
     tree.add(5)
     tree.add(2)
     tree.add(4)
     assert tree.head.left.value == 3
-    
+    assert tree.head.left.right.value == 5
+    assert tree.head.left.right.value == 5
