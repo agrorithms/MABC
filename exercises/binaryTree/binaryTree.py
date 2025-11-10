@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 class Node:
     def __init__(self, value: int) -> None:
@@ -48,11 +48,14 @@ class BinaryTree:
             else:
                 return
            
-    def min(self) -> int:
+    def min(self, start: Optional[Node] = None) -> int:
         if not self.head:
             return None
 
-        curr: Node = self.head
+        if start:
+            curr: Node = start
+        else:
+            curr: Node = self.head
 
         while curr:
             if curr.left:
@@ -60,11 +63,14 @@ class BinaryTree:
             else:
                 return curr.value
     
-    def max(self) -> int:
+    def max(self,start: Optional[Node] = None) -> int:
         if not self.head:
             return None
 
-        curr: Node = self.head
+        if start:
+            curr: Node = start
+        else:
+            curr: Node = self.head
 
         while curr:
             if curr.right:
@@ -74,61 +80,35 @@ class BinaryTree:
 
     
     def contains(self, value: int) -> None:
-        if not self.head:
-            return False
-        
-        curr: Node = self.head
-        while curr:
-            if value > curr.value:
-                curr = curr.right
-            elif value < curr.value:
-                curr = curr.left
-            else:
-                return True
-        return False
+        return bool(self._findNode(value))
     
     def remove(self, value: int) -> None:
-        if not self.head:
-            return
-        
-        curr: Node = self.head
-        prev: Optional[Node] = None
-        while curr:
-            if value > curr.value:
-                prev = curr
-                curr = curr.right
-            elif value < curr.value:
-                prev = curr
-                curr = curr.left
-            else:
-                break
+        prev, curr = self._findNode(value)
+        head=False
         if not curr:
             return
-        print(self, curr == self.head)
-        print(f'remove {value}', curr)
-        if curr == self.head:
-            if self.head.left:
-                toAdd=self.head.right
-                self.head = self.head.left
-                if toAdd:
-                    self.add(toAdd)
-                return
-            else:
-                self.head = self.head.right
-                return
+        if not prev:
+            prev=curr
+            head=True
         
-        if prev.value<curr.value:
+
+        if prev.value<=curr.value:
             if curr.left:
                 toAdd=curr.right
-                prev.right = curr.left
+                if head:
+                    self.head=curr.left
+                else:
+                    prev.right = curr.left
                 if toAdd:
                     self.add(toAdd)
                     return
+            elif head:
+                self.head = curr.right
             else:
                 prev.right = curr.right
                 return
         else:
-            print(f'prev: {prev}' )
+
             if curr.right:
                 toAdd=curr.left
                 prev.left = curr.right
@@ -137,57 +117,55 @@ class BinaryTree:
                     return
             else:
                 prev.left = curr.left
-                print(f'prev: {prev}')
                 return
             
-
-        """
-        nodeStack: list[Node] = [curr]
-        if curr == self.head:
-            if curr.left and curr.right:
-                
-                while curr:
-                    if curr.left:
-                        curr=curr.left
-                        nodeStack.append(curr)
-                    else:
-                        break
-                while len(nodeStack)>1:
-                    nodeStack.pop().left = nodeStack[-1].left
-
-            elif curr.right:
-                self.head = curr.right
-            elif curr.left:
-                self.head = curr.left
+    def _findNode(self,value: int) -> Optional[Tuple[Optional['Node'], 'Node']]:
+        if not self.head:
+            return None
+        
+        prev: Optional[Node] = None
+        curr: Node = self.head
+        while curr:
+            if value > curr.value:
+                prev=curr
+                curr = curr.right
+            elif value < curr.value:
+                prev=curr
+                curr = curr.left
             else:
-                self.head = None
-            return    
+                return prev , curr
+        return None
+    
+    def maxDepth(self, start: Optional[Node] = None ) -> int:
+        if not self.head:
+            return None
+        if start:
+            curr: Node = start
+        else:
+            curr: Node = self.head
+        seen: set = set()
+        nodeStack: list = [curr]
+        depth = 0
+        maxdepth=depth
+        
+        while nodeStack:
+            if curr.left and curr.left.value not in seen:
+                nodeStack.append(curr)
+                curr=curr.left
+                seen.add(curr.value)
                 
-
-        if curr.value<prev.value:
-            prev.left = curr.left
-            while curr:
-                if curr.left:
-                    curr=curr.left
-                    nodeStack.append(curr)
-                else:
-                    break
-            while len(nodeStack)>1:
-                nodeStack.pop().left = nodeStack[-1].left
-            return
-        elif curr.value>prev.value:
-            prev.value = curr.right
-            while curr:
-                if curr.right:
-                    curr=curr.right
-                    nodeStack.append(curr)
-                else:
-                    break
-            while len(nodeStack)>1:
-                nodeStack.pop().right = nodeStack[-1].right
-            return
-        """
+                depth+=1
+            elif curr.right and curr.right.value not in seen:
+                nodeStack.append(curr)
+                curr=curr.right
+                seen.add(curr.value)
+                depth+=1
+            else:
+                curr=nodeStack.pop()
+                depth-=1
+            maxdepth = depth if depth>maxdepth else maxdepth
+        return maxdepth
+            
 
     def __repr__(self):
         return dict(head=self.head).__repr__()
-    
