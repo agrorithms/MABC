@@ -61,60 +61,26 @@ def test_add():
     assert tree.head.left.left.value == 1
     assert tree.head.left.left.right.value == 3
 
-def test_min():
+@pytest.mark.parametrize ('addNodes,expected', [
+    ([7,9,5,1,3,5,-12,-13,-1], [7,7,5,1,1,1,-12,-13,-13]),
+])
+def test_min(addNodes,expected):
     tree=BinaryTree()
     assert tree.min() == None
-    tree.add(7)
-    assert tree.min() == 7
-    
-    tree.add(9)
-    assert tree.min() == 7
-    
-    tree.add(5)
-    assert tree.min() == 5
-    
-    tree.add(1)
-    assert tree.min() == 1
-   
-    tree.add(3)
-    assert tree.min() == 1
-    
-    tree.add(5)
-    assert tree.min() == 1
-    tree.add(-12)
-    tree.add(-13)
-    tree.add(-1)
-    assert tree.min() == -13
+    for i in range(len(addNodes)):
+        tree.add(addNodes[i])
+        assert tree.min().value == expected[i]
 
-
-def test_max():
+@pytest.mark.parametrize ('addNodes,expected', [
+    ([7,9,5,1,10,5,10,11,12,13,-1], [7,9,9,9,10,10,10,11,12,13,13]), 
+])
+def test_max(addNodes, expected):
     tree=BinaryTree()
-    assert tree.max() == None
-    tree.add(7)
-    assert tree.max() == 7
-    
-    tree.add(9)
-    assert tree.max() == 9
-    
-    tree.add(5)
-    assert tree.max() == 9
-    
-    tree.add(1)
-    assert tree.max() == 9
-   
-    tree.add(10)
-    assert tree.max() == 10
-    
-    tree.add(5)
-    assert tree.max() == 10
-    tree.add(10)
-    assert tree.max() == 10
-    tree.add(11)
-    assert tree.max() == 11
-    tree.add(12)
-    tree.add(13)
-    tree.add(-1)
-    assert tree.max() == 13
+    assert tree.min() == None
+    for i in range(len(addNodes)):
+        tree.add(addNodes[i])
+        assert tree.max().value == expected[i]
+
 
 def test_contains():
     tree=BinaryTree()
@@ -191,37 +157,35 @@ def test_remove():
     tree.add(7)
     tree.add(11)
     tree.remove(8)
-    testCompare = Node(7)
-    testCompare.right = Node(9)
-    assert tree.head.value == 6
-    assert tree.head.left == None
-    assert tree.head.right == testCompare
-    assert tree.head.right.right.value==9
-    assert tree.head.right.right.right.value==10
-    assert tree.head.right.right.right.right.value==(11) # test remove head with left and right children
+    assert tree.head.value == 7
+    assert tree.head.left.value == 6
+    assert tree.head.right.value==9
+    assert tree.head.right.right.value==10
+    assert tree.head.right.right.right.value==11 # test remove head with left and right children
 
     tree.add(3)
     tree.add(5)
     tree.add(2)
     tree.add(4)
-    assert tree.head.left.value == 3
-    assert tree.head.left.right.value == 5
-    assert tree.head.left.left.value == 2
-    assert tree.head.left.right.left.value == 4
+    assert tree.head.left.left.value == 3
+    assert tree.head.left.left.right.value == 5
+    assert tree.head.left.left.left.value == 2
+    assert tree.head.left.left.right.left.value == 4
     
     tree.remove(3) # remove depth 1 left child with left and right children
-    assert tree.head.left.value == 5 #test remove left child with left and right children
-    assert tree.head.left.left.value == 4 #test remove left child with left and right children
-    assert tree.head.left.left.left.value == 2 #test remove left child with left and right children
+    assert tree.head.left.left.value == 2 #test remove left child with left and right children
+    assert tree.head.left.left.right.value == 5 #test remove left child with left and right children
+    assert tree.head.left.left.right.left.value == 4 #test remove left child with left and right children
 
     tree.remove(10)
-    assert tree.head.right.right.right.value==11 # test remove right child with only right child
+    assert tree.head.right.right.value==11 # test remove right child with only right child
 
     tree.add(10)
     tree.add(15)
     tree.remove(11)
-    assert tree.head.right.right.right.value==10 # test remove  right child with left and right children
-    assert tree.head.right.right.right.right.value==15 # remove  right child with left and right children
+    assert tree.head.right.right.value==10 # test remove  right child with left and right children
+    assert tree.head.right.right.right.value==15 # remove  right child with left and right children
+    assert tree.head.right.right.left==None
     newTree = BinaryTree()
     newTree.add(10)
     newTree.add(5)
@@ -229,16 +193,16 @@ def test_remove():
     newTree.add(6)
     newTree.remove(5)
 
-    assert newTree.head.left.value==7 # test remove left child with right child
-    assert newTree.head.left.left.value==6
+    assert newTree.head.left.value==6 # test remove left child with right child
+    assert newTree.head.left.right.value==7
 
 
     newTree.add(15)
     newTree.add(12)
     newTree.add(13)
     newTree.remove(15)
-    assert newTree.head.right.value==12 # test remove right child with left child
-    assert newTree.head.right.right.value==13
+    assert newTree.head.right.value==13 # test remove right child with left child
+    assert newTree.head.right.left.value==12
 
 @pytest.mark.parametrize ('addNodes,expected', [
     ([], None),

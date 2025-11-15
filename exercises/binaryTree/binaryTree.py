@@ -48,7 +48,7 @@ class BinaryTree:
             else:
                 return
            
-    def min(self, start: Optional[Node] = None) -> int:
+    def min(self, start: Optional[Node] = None) -> Node:
         if not self.head:
             return None
 
@@ -61,9 +61,9 @@ class BinaryTree:
             if curr.left:
                 curr=curr.left
             else:
-                return curr.value
+                return curr
     
-    def max(self,start: Optional[Node] = None) -> int:
+    def max(self,start: Optional[Node] = None) -> Node:
         if not self.head:
             return None
 
@@ -76,13 +76,40 @@ class BinaryTree:
             if curr.right:
                 curr=curr.right
             else:
-                return curr.value
+                return curr
 
     
-    def contains(self, value: int) -> None:
+    def contains(self, value: int) -> bool:
         return bool(self._findNode(value))
     
     def remove(self, value: int) -> None:
+        prev, curr = self._findNode(value)
+        new=None
+        if curr.left:
+            new=self.max(curr.left)
+            self.remove(new.value)
+            new.left=curr.left
+            new.right=curr.right
+            
+        elif curr.right:
+            new=self.min(curr.right)
+            self.remove(new.value)
+            new.left=curr.left
+            new.right=curr.right
+            
+        if not prev:
+            self.head = new or None
+        elif prev.value<curr.value:
+            prev.right = new or None
+        else:
+            prev.left = new or None
+        
+
+        
+
+    
+    
+    def remove2(self, value: int) -> None:
         prev, curr = self._findNode(value)
         head=False
         if not curr:
@@ -139,13 +166,10 @@ class BinaryTree:
     def maxDepth(self, start: Optional[Node] = None ) -> int:
         if not self.head:
             return None
-        if start:
-            curr: Node = start
-        else:
-            curr: Node = self.head
+        curr = start or self.head
         seen: set = set()
         nodeStack: list = [curr]
-        depth = 0
+        depth: int = 0
         maxdepth=depth
         
         while nodeStack:
