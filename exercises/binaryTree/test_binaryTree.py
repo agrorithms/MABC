@@ -248,3 +248,161 @@ def test_maxdepth_old():
     assert depthTree.maxDepth() == 2
     depthTree.add(175)
     assert depthTree.maxDepth() == 3
+
+
+def test_nodeAdd():
+    start = Node(100)
+    start.add(10)
+    assert start.left.value == 10
+    start.add(2)
+    assert start.left.left.value == 2
+    start.add(200)
+    start.add(150)
+    assert start.right.value == 200
+    assert start.right.left.value == 150
+    start.add(7)
+    start.add(15)
+    assert start.left.left.right.value == 7
+    assert start.left.right.value == 15
+
+
+
+@pytest.mark.parametrize ('addNodes,expected', [
+    ([100], 100),
+    ([100,50,20], 20),
+    ([100,200,300], 100),
+    ([100,200,1], 1),
+    ([100,50,400,2,1,-1],-1),
+    ([100,200,300,5000,0], 0),
+    ([100,200,150,-1000], -1000),
+    ([100,50,25,75,87,23,56,12,873,536,65], 12)
+
+])
+def test_nodemin(addNodes, expected):
+    if addNodes:
+        start = Node(addNodes[0])
+    for n in addNodes:
+        start.add(n)
+    assert start.min().value == expected    
+
+
+@pytest.mark.parametrize ('addNodes,expected', [
+    ([100], 100),
+    ([100,50,20], 100),
+    ([100,200,300], 300),
+    ([100,200,1], 200),
+    ([100,50,400,2,1,-1],400),
+    ([100,200,300,5000,0], 5000),
+    ([100,200,150,-1000], 200),
+    ([100,50,25,75,87,23,56,12,873,536,65], 873)
+
+])
+def test_nodemax(addNodes, expected):
+    if addNodes:
+        start = Node(addNodes[0])
+    for n in addNodes:
+        start.add(n)
+    assert start.max().value == expected
+
+
+@pytest.mark.parametrize ('addNodes,value,expected', [
+    ([100], 100, True),
+    ([100,50,20], 100, True),
+    ([100,200,300], 300, True),
+    ([100,200,1], 200, True),
+    ([100,50,400,2,1,-1], 1, True),
+    ([100,200,300,5000,0], 200, True),
+    ([100,200,150,-1000,0,50], 0, True),
+    ([100,50,25,75,87,23,56,12,873,536,65], 65, True),
+    ([100], 0, False),
+    ([100,50,20], 101, False),
+    ([100,200,300], 0, False),
+    ([100,200,1], 2, False),
+    ([100,50,400,2,1,-1], 0, False)
+
+])
+def test_nodeContains(addNodes, value, expected):
+    
+    start = Node(addNodes[0])
+    for n in addNodes:
+        start.add(n)
+    assert start.contains(value) == expected
+
+def test_nodeRemove():
+    headNode=Node(100)
+    headNode.add(200)
+    headNode.remove(200)
+    assert headNode == Node(100) #remove only child (right)
+    headNode.add(200)
+    headNode.remove(100)
+    assert headNode == Node(200) #remove only child (left)
+    headNode.add(100)
+    headNode.add(300)
+    headNode.remove(100)
+    assert headNode.value == 200 # remove leaf node / left child
+    assert headNode.right.value == 300 # # remove leaf node / left child
+    headNode.add(100)
+    headNode.add(50)
+    headNode.add(150)
+    headNode.remove(100)
+    assert headNode.value == 200 # remove a left child with two children
+    assert headNode.right.value == 300 # remove a left child with two children
+    assert headNode.left.value == 50 # remove a left child with two children
+    assert headNode.left.right.value == 150 # remove a left child with two children
+    headNode.remove(50)
+    assert headNode.value == 200 # remove a left child with only right child
+    assert headNode.right.value == 300 # remove a left child with only right child
+    assert headNode.left.value == 150 # remove a left child with only right child
+    headNode.add(100)
+    headNode.remove(150)
+    assert headNode.value == 200 # remove a left child with only left child
+    assert headNode.right.value == 300 # remove a left child with only left child
+    assert headNode.left.value == 100 # remove a left child with only left child
+    headNode.add(250)
+    headNode.remove(300)
+    assert headNode.value == 200 # remove a right child with only left child
+    assert headNode.right.value == 250 # remove a right child with only left child
+    assert headNode.left.value == 100 # remove a right child with only left child
+    headNode.add(400)
+    headNode.remove(250)
+    assert headNode.value == 200 # remove a right child with only right child
+    assert headNode.right.value == 400 # remove a right child with only right child
+    assert headNode.left.value == 100 # remove a right child with only right child
+    
+    headNode.remove(250)
+    assert headNode.value == 200 # remove a right child with only right child
+    assert headNode.right.value == 400 # remove a right child with only right child
+    assert headNode.left.value == 100 # remove a right child with only right child
+    headNode.add(500)
+    headNode.add(275)
+    headNode.remove(400)
+    assert headNode.value == 200 # remove a right child with both child
+    assert headNode.right.value == 275 # remove a right child with both child
+    assert headNode.right.right.value == 500 # remove a right child with both child
+    assert headNode.left.value == 100 # remove a right child with both child
+    headNode.add(251)
+    headNode.add(255)
+    headNode.add(254)
+    headNode.add(257)
+    headNode.remove(275)
+    assert headNode.value == 200 # remove a right child with a long route tothe in order predecessor
+    assert headNode.right.value == 257 # remove a right child with a long route tothe in order predecessor
+    assert headNode.right.right.value == 500 # remove a right child with a long route tothe in order predecessor
+    assert headNode.left.value == 100 # remove a right child with a long route tothe in order predecessor
+    assert headNode.right.left.value == 251 # remove a right child with a long route tothe in order predecessor
+    assert headNode.right.left.right.value == 255 # remove a right child with a long route tothe in order predecessor
+    assert headNode.right.left.right.left.value == 254 # remove a right child with a long route tothe in order predecessor
+    assert headNode.right.left.right.right == None # remove a right child with a long route tothe in order predecessor
+    headNode.add(253)
+    headNode.remove(251)
+    assert headNode.value == 200 # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.right.value == 257 # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.right.right.value == 500 # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.left.value == 100 # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.right.left.value == 253 # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.right.left.right.value == 255 # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.right.left.right.left.value == 254 # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.right.left.right.left.left == None # remove a right child with no left child and a long route tothe in order successor
+    assert headNode.right.left.right.right == None # remove a right child with no left child and a long route tothe in order successor
+
+
