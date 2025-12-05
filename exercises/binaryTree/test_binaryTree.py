@@ -1,5 +1,6 @@
 import pytest
-from binaryTree import Node, BinaryTree
+from binaryTree import BinaryTree
+from node import Node
 
 def test_repr_node():
     testNode = Node(4)
@@ -27,6 +28,22 @@ def test_eq_node():
     testNode2.right = Node(2)
     assert testNode1 == testNode2
 
+@pytest.mark.parametrize ('addNodes,expected', [
+    ([20,5,30,15], [1,1,2,2]),
+    ([20,5,30,40,50,60,70], [1,1,2,3,4,5,6]),
+    ([20,5,100,25,90,30,80], [1,1,2,3,4,5,6]),
+    ([20,5,100,25,90,30,80,22,95,27,85], [1,1,2,3,4,5,6,6,6,6,7]),
+    ([20,5,100,25,90,30,80,22,95,27,85,11,12,13,0,19,105,110], [1,1,2,3,4,5,6,6,6,6,7,7,7,7,7,7,7,7]),
+    ([5,15,2,7,1,3,12,18], [1,1,2,2,3,3,3,3])
+    
+])
+def test_max_depth_node(addNodes,expected):
+    testNode=Node(10)
+    assert testNode.maxDepth()==0
+    for i in range(len(addNodes)):
+        testNode.add(addNodes[i])
+        assert testNode.maxDepth()== expected[i]
+    testNode.add(20)
     
 
 def test_add():
@@ -203,6 +220,10 @@ def test_remove():
     newTree.remove(15)
     assert newTree.head.right.value==13 # test remove right child with left child
     assert newTree.head.right.left.value==12
+    newTree.remove(200)
+    assert newTree.head.right.value==13 # test remove right child with left child
+    assert newTree.head.right.left.value==12
+
 
 @pytest.mark.parametrize ('addNodes,expected', [
     ([], None),
