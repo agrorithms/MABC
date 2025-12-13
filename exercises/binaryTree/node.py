@@ -35,38 +35,17 @@ class Node:
     def contains(self, value: int) -> bool:
         return bool(self._findNode(value))
     
-    def remove(self, value: int) -> None:
-        if value < self.value:
-            if self.left:
-                if self.left.value == value:
-                    target = self.left
-                    if target.isLeaf():
-                        self.left = None
-                        return
-                    self._replaceNode(target)
-                    
-                    return
-                else:
-                    return self.left.remove(value)
-            else:
-                return None
-
-        elif value > self.value:
-            if self.right:
-                if self.right.value == value:
-                    target = self.right
-                    if target.isLeaf():
-                        self.right = None
-                        return
-                    self._replaceNode(target)
-                    return
-                    
-                else:
-                    return self.right.remove(value)
-            else: 
-                return None
+    def _remove(self) -> 'Node':
+        if self.left:
+            target = self.left.max()
+            self.value= target.value
+            return target._remove()
+        elif self.right:
+            target = self.right.min()
+            self.value = target.value
+            return target._remove()
         else:
-            self._replaceNode(self)
+            return self
     
     def maxDepth(self,depth=0) -> int:
         newdepth=depth
@@ -81,6 +60,13 @@ class Node:
     
     def isLeaf(self) -> bool:
         return self.right == None and self.left == None
+    
+    def _maxRetParent(self):
+        if not self.right:
+            return None,self
+        elif not self.right.right:
+            return self,self.right
+        return self.right._maxRetParent()
 
     def _replaceNode(self,child: 'Node') -> None:
         if child.left:
