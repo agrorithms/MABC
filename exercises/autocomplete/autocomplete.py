@@ -1,6 +1,6 @@
 import time
 from functools import wraps
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 def timer_attribute(func):
     @wraps(func)
@@ -21,26 +21,27 @@ class Autocomplete:
             self.words= f.readlines()
             self.words = [line.strip() for line in self.words]
             self.words.sort()
+            print(self.words[-1], len(self.words)-1)
         self.prompt()
 
     def prompt(self):
         prefix=input('Type a prefix: ').lower()
-        if prefix in 'qx':
+        if prefix and prefix in 'qx':
             if self.quit_program():
                 return
-        if prefix !='':
+        if prefix:
             firstindex, lastindex = self._findFirstAndLastIndices(prefix)
             self.print_results(firstindex,lastindex)
             
         self.prompt()
         
-    def print_results(self,firstIdx: int,secondIdx: int) -> None:
-        if firstIdx is None:
+    def print_results(self,firstIdx: int, secondIdx: int) -> None:
+        if secondIdx ==-1:
             print('No results found')
             return
         
-        additionalResults: int = secondIdx-firstIdx-20
-        for i in range(min(20,secondIdx-firstIdx)):
+        additionalResults: int = secondIdx-firstIdx-19
+        for i in range(min(20,secondIdx-firstIdx+1)):
             print(self.words[firstIdx+i])
         if additionalResults>0:
             print(f'{additionalResults} more results found')
@@ -59,61 +60,46 @@ class Autocomplete:
             return self.quit_program()
         
     @timer_attribute
-    def _findFirstAndLastIndices(self, prefix: str) -> Union[Tuple[None,None], Tuple[int,int]]: 
-        firstindex=self._binarySearchFirst(prefix)
-        lastindex = None
+    def _findFirstAndLastIndices(self, prefix: str) -> Tuple[int,int]: 
+        firstindex=self._binarySearchBoth(prefix)
+        lastindex = -1
     
-        if firstindex!=None:
-            lastindex=self._binarySearchLast(prefix,start=firstindex)
+        if firstindex!=-1:
+            lastindex=self._binarySearchBoth(prefix,start=firstindex,last=True)
         return firstindex, lastindex 
     
-    def _binarySearchFirst(self, prefix: str, start: int = 0) -> int:
+    
+    def _binarySearchBoth(self, prefix: str, start: int = 0, last: bool = False) -> int:
         length=len(prefix)
         left=start
         right=len(self.words)-1 
-        idx=None
+        idx=-1
         
-        while left<=right and not idx:
+        while left<=right and idx<0:
             pointer=left + (right-left)//2
-            if self.words[pointer][:length]>=prefix: 
-                if(self.words[pointer-1][:length]<prefix or (pointer == 0 and self.words[pointer][:length]==prefix)):
-                    idx=pointer
-                right=pointer-1 
-                
-            else:
-                if (pointer == len(self.words)-1):
-                    if self.words[pointer][:length]==prefix: 
-                        idx=pointer+1
-                elif self.words[pointer+1][:length]>=prefix:
-                    idx=pointer+1
-                
-                left=pointer+1
-        
-        #binary search will find an index where self.words 'crosses' the prefix even if prefix is not found
-        #this only returns index if it matches prefix
-        if idx!=None and self.words[idx][:length] == prefix:
-            #print(f'bsF, idx: {idx}, points to {self.words[idx]}')
-            return idx
-    
-    def _binarySearchLast(self, prefix: str, start: int = 0) -> int:
-        length=len(prefix)
-        left=start
-        right=len(self.words)-1
-        idx=None
+            comparePrefix=self.words[pointer][:length]
+            compareNext = self.words[(pointer+1)%len(self.words)][:length]
+            comparePrev = self.words[pointer-1][:length]
+            #print(f'{prefix=},{pointer=},{comparePrev=},{comparePrefix=},{compareNext=}')
+            if comparePrefix==prefix:
+                if last:
+                    if pointer == len(self.words)-1 or compareNext>prefix:
+                        idx=pointer
+                        #print(f'{prefix=},{last=},{idx=}')
+                    left = pointer+1
+                else:
+                    if pointer == 0 or comparePrev<prefix:
+                        idx=pointer
+                        #print(f'{prefix=},{last=},{idx=}')
+                    right = pointer-1
 
-        while left<=right and not idx:
-            pointer=left + (right-left)//2
-        
-            if self.words[pointer][:length]<=prefix: 
-                if((pointer == len(self.words)-1 and self.words[pointer][:length]==prefix) or self.words[pointer+1][:length]>prefix ):
-                    idx=pointer+1
-                left=pointer+1 
-                
-            else:
-                if self.words[pointer-1][:length]==prefix:
-                    idx=pointer
-                right=pointer-1
-        #print(f'bsL, idx: {idx}, points to {self.words[idx%len(self.words)]}')
+            elif comparePrefix > prefix:
+                right = pointer - 1
+            
+            elif comparePrefix < prefix:
+                left = pointer + 1
+
+        #print(f'done, {idx=}')
         return idx
 
 
