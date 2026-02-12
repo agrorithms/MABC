@@ -1,4 +1,15 @@
-from typing import Union, Literal
+import time
+from functools import wraps
+from typing import Union, Literal, Callable
+
+def timeWrapper(func: Callable):
+    def wrapper(*args,**kwargs):
+        startTime: float =time.time()
+        res = func(*args, **kwargs)
+        elapsedTime: float = time.time()-startTime
+        print(f'Results found in {elapsedTime*1000:.5f} milliseconds')
+        return res
+    return wrapper
 
 class TrieNode():
     __slots__ = ('isEnd', 'children')
@@ -43,8 +54,7 @@ class Autocomplete():
         if prefix.isalpha():
             if prefix in 'qx':
                 if self.quit(): return
-            else:
-                self.print_results(prefix)
+            self.print_results(prefix)
                     
         else:
             print('Prefix must contain alphabetical characters only.')
@@ -63,7 +73,8 @@ class Autocomplete():
         
         print('Answer with y or n')
         return self.quit()
-
+    
+    @timeWrapper
     def print_results(self, prefix: str):
         startNode: Union[TrieNode,Literal[False]] = self.trie.searchPrefix(prefix)
         if not startNode:
